@@ -10,34 +10,20 @@ import asyncio
 
 import geopandas as gpd
 import pandas as pd
-import shapely
 from shapely.ops import unary_union
 from tqdm import tqdm
 
 import config as cfg
-from src.utils import curb_utils, las_utils
+from src.utils import bgt_utils, curb_utils, las_utils
 
 
 def process_tilecodes(tilecodes: list[str]) -> None:
     cfg.ensure_folders()
 
-    # Load BGT sidewalk + parking layers
-    dfs = []
-    for layer in cfg.BGT_SIDEWALK_LAYERS:
-        csv_path = cfg.BGT_DIR / f"{layer}.csv"
-        if csv_path.exists():
-            dfs.append(
-                pd.read_csv(csv_path, sep=";", usecols=["bgt-functie", "geometrie"])
-            )
-        else:
-            print(f"  WARNING: {csv_path} not found, skipping")
-
-    if not dfs:
-        raise FileNotFoundError(f"No BGT CSV files found in {cfg.BGT_DIR}")
-
-    df_bgt = pd.concat(dfs, ignore_index=True).rename(columns={"geometrie": "geometry"})
-    df_bgt["geometry"] = df_bgt["geometry"].apply(shapely.wkt.loads)
-    gdf_bgt = gpd.GeoDataFrame(df_bgt, geometry="geometry", crs=cfg.CRS)
+    # Load BGT sidewalk + parking polygons (PDOK API, cached)
+    gdf_bgt = bgt_utils.load_bgt(tilecodes, functie_filter=cfg.BGT_SIDEWALK_LAYERS)
+    if gdf_bgt.empty:
+        raise RuntimeError("No BGT sidewalk features found for the given tilecodes.")
 
     # Build per-tile data
     tiles: dict[str, dict] = {}

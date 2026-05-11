@@ -9,50 +9,27 @@ from __future__ import annotations
 import asyncio
 
 import geopandas as gpd
-import pandas as pd
-from shapely import wkt
 
 import config as cfg
-from src.utils import ahn_fuser, bgt_fuser, labels as Labels, pipeline as Pipeline
+from src.utils import ahn_fuser, bgt_fuser, bgt_utils, labels as Labels, pipeline as Pipeline
 
 
 def process_tilecodes(tilecodes: list[str]) -> None:
     cfg.ensure_folders()
 
-    # Load BGT layers
-    dfs = []
-    for layer in cfg.BGT_ROAD_LAYERS:
-        csv_path = cfg.BGT_DIR / f"{layer}.csv"
-        if csv_path.exists():
-            dfs.append(
-                pd.read_csv(csv_path, sep=";", usecols=["bgt-functie", "geometrie"])
-            )
-        else:
-            print(f"  WARNING: {csv_path} not found, skipping")
+    # Load BGT road polygons (downloads from PDOK on first run, then cached)
+    gdf_bgt = bgt_utils.load_bgt(tilecodes, functie_filter=cfg.BGT_ROAD_LAYERS)
+    if gdf_bgt.empty:
+        raise RuntimeError("No BGT road features found for the given tilecodes.")
 
-    if not dfs:
-        raise FileNotFoundError(f"No BGT CSV files found in {cfg.BGT_DIR}")
-
-    df_bgt = pd.concat(dfs, ignore_index=True).rename(columns={"geometrie": "geometry"})
-    df_bgt["geometry"] = df_bgt["geometry"].apply(wkt.loads)
-    gdf_bgt = gpd.GeoDataFrame(df_bgt, geometry="geometry", crs=cfg.CRS)
-
-    # Load bbox polygons and subset BGT per tilecode
-    bbox_dfs = []
-    for tilecode in tilecodes:
-        bbox_file = cfg.BBOX_DIR / f"bbox_{tilecode}.geojson"
-        if bbox_file.exists():
-            bbox_dfs.append(gpd.read_file(bbox_file))
-        else:
-            print(f"  WARNING: {bbox_file} not found")
-
-    if not bbox_dfs:
-        raise FileNotFoundError("No bbox polygon files found. Run step 1 first.")
-
-    bbox_polygons = pd.concat(bbox_dfs, ignore_index=True)
+    # Subset BGT per tilecode
     gdf_bgt_tiles = {}
     for tilecode in tilecodes:
-        bbox = bbox_polygons[bbox_polygons["tilecode"] == tilecode]
+        bbox_file = cfg.BBOX_DIR / f"bbox_{tilecode}.geojson"
+        if not bbox_file.exists():
+            print(f"  WARNING: {bbox_file} not found")
+            continue
+        bbox = gpd.read_file(bbox_file)
         gdf_bgt_tiles[tilecode] = gpd.sjoin(
             gdf_bgt, bbox, how="inner", predicate="intersects"
         )
