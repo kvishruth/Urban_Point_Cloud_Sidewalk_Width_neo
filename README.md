@@ -2,6 +2,8 @@
 
 Labels urban point-cloud tiles with ground, building, and road classes using AHN5 surface grids and BGT road polygons, then extracts 2D obstacle footprints and estimates curb heights along sidewalk boundaries.
 
+The repository is a modified version of the work done in Urban Point Cloud Sidewalk Width <https://github.com/Amsterdam-AI-Team/Urban_PointCloud_Sidewalk_Width>. The current scripts are able to work with the new LAZ tiles which are no more available in 50m x 50m tiles, have a different naming convention, use older versions of the API and use a Python wrapper of CloudCompare which are difficult to set up with the newer Python versions. 
+
 ## Setup
 
 ```bash
