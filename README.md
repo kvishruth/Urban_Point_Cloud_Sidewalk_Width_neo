@@ -29,10 +29,6 @@ data/
 │   ├── ahn/
 │   │   └── ahn_units_shapefile/
 │   │       └── AHN_subunits_GeoTiles.shp   ← AHN grid index
-│   └── bgt/                           ← BGT CSV layers
-│       ├── BGT_WGL_rijbaan_lokale_weg.csv
-│       ├── BGT_WGL_voetpad.csv
-│       └── ...
 └── output/                            ← Created automatically
     ├── ahn/                           ← Surface grids (.npz)
     ├── labeled_pointcloud/            ← Labeled LAZ files
@@ -125,6 +121,7 @@ CURB_MIN_HEIGHT = 0.05         # m — curbs below this are "accessible"
 │   ├── las_utils.py       #   LAS/LAZ read/write/crop
 │   ├── obstacles_utils.py #   Voxel clustering + concave hulls
 │   └── pipeline.py        #   Sequential data-fusion pipeline
+|   └── bgt_utils.py       #   PDOK bgt data download
 └── data/                  # Git-ignored
 ```
 
