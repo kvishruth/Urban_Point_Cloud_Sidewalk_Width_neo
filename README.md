@@ -1,4 +1,4 @@
-# Point-Cloud Labeling Pipeline
+# Point-Cloud Pipeline for sidewalk width calculation
 
 Labels urban point-cloud tiles with ground, building, and road classes using AHN5 surface grids and BGT road polygons, then extracts 2D obstacle footprints and estimates curb heights along sidewalk boundaries.
 
