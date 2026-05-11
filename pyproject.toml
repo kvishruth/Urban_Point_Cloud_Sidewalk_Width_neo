@@ -12,6 +12,7 @@ dependencies = [
     "numba",
     "numpy",
     "pyproj",
+    "requests",
     "scipy",
     "shapely>=2.0",
     "tqdm",
